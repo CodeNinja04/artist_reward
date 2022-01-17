@@ -11,9 +11,7 @@ function App() {
     "0x5b90741953F7267A9699aAbd18D0D6cC41347e1D"
   );
   const [data, setData] = useState("");
-   const [eventid, setEventid] = useState("");
-  // const [candidate1, setCandidate1] = useState("");
-  // const [candidate2, setCandidate2] = useState("");
+  const [eventid, setEventid] = useState("");
   const [balance, setBalance] = useState("");
   const [change, setChange] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,10 +19,6 @@ function App() {
   useEffect(() => {
     loadweb3();
     LoadBlockchaindata();
-
-    //  .then(setBalance(console.log));
-    // const value = window.web3.utils.fromWei(amt, "ether");
-    // setBalance(value);
   }, []);
 
   const loadweb3 = async () => {
@@ -43,7 +37,6 @@ function App() {
     const accounts = await web3.eth.getAccounts();
     setAccount(accounts[0]);
 
-    //const balance = web3.eth.getBalance(account.toString());
     console.log(accounts.toString());
     let amt = await window.web3.eth.getBalance(accounts[0]);
     const amt1 = await web3.utils.fromWei(amt, "ether");
@@ -78,13 +71,42 @@ function App() {
       });
   };
 
-  const getEvents = async (id) => {
+  const sendartist = async () => {
+    await data.methods
+      .createArtist(artistacc,"artist2","singer").send({from:account}).then(
+        console.log("artist added")
+      );
+
+    
+      
+  };
+
+
+
+  const getEventbyid = async (id) => {
     // await data.methods.Eventslist(id).send({from:account}).on("transactionhash",() => {
     //   console.log("events fetched");
     // });
 
      let x =  await data.methods.Eventslist(id).call();
      console.log(x);
+  }
+
+   const getArtistbyid = async (id) => {
+    // await data.methods.Eventslist(id).send({from:account}).on("transactionhash",() => {
+    //   console.log("events fetched");
+    // });
+
+     let x =  await data.methods.Artistslist(id).call();
+     console.log(x);
+  }
+
+  const getEventslist = async () => {
+    console.log(await data.methods.getEvents().call())
+  }
+
+  const getArtistslist = async () => {
+    console.log(await data.methods.getArtists().call())
   }
 
   const onChange = (e) => {
@@ -97,7 +119,11 @@ function App() {
   const onSubmit = (e) => {
     e.preventDefault();
     //send();
-    getEvents(eventid);
+    //sendartist();
+    //getArtistbyid(eventid);
+    getArtistslist();
+    getEventslist();
+    //getEventbyid(eventid);
     console.log("done");
     
 
@@ -110,7 +136,7 @@ function App() {
   return (
     <div className="App">
       Hello
-      {/* {data.methods.symbol} */}
+     
       <p>ACCOUNT:{account}</p>
       <p>BALANCE:{balance}</p>
       <div>SYMBOL :{symbol}</div>
