@@ -3,24 +3,36 @@
 import React, { useEffect, useState, useRef } from "react";
 import ArtistRewardabi from "../contracts/ArtistReward.json";
 import Web3 from "web3";
+import { Moralis } from "moralis";
+import { useMoralis, useMoralisQuery } from "react-moralis";
 //import Navbar from "./components/Navbar";
 
-function App() {
+function Main() {
+   const { isAuthenticated, user, authenticate, isAuthenticating } = useMoralis();
   const [account, setAccount] = useState("");
   const [artistacc, setArtistacc] = useState(
     "0xB5c70149ee6880F79E319652040aEb685e39D590"
   );
-  const [data, setData] = useState("");
+  const [dataeth, setdataeth] = useState("");
   const [eventid, setEventid] = useState("");
+  const [artist,setArtist]=useState("");
+  
   const [balance, setBalance] = useState("");
   const [change, setChange] = useState(false);
   const [loading, setLoading] = useState(false);
   const [symbol, setSymbol] = useState("");
   const [event, setEvent] = useState();
+  const { data, error, isLoading } = useMoralisQuery("Artist"); 
+
+
 
   useEffect(() => {
+    
     loadweb3();
-    LoadBlockchaindata();
+    LoadBlockchaindataeth();
+    //getEventslist();
+    
+    //findartist();
     //getEventbyid();
   }, []);
 
@@ -35,7 +47,7 @@ function App() {
     }
   };
 
-  const LoadBlockchaindata = async () => {
+  const LoadBlockchaindataeth = async () => {
     const web3 = window.web3;
     const accounts = await web3.eth.getAccounts();
     setAccount(accounts[0]);
@@ -47,26 +59,34 @@ function App() {
     console.log(amt1);
 
     const networkId = await web3.eth.net.getId();
-    const networkData = ArtistRewardabi.networks[networkId];
+    const networkdataeth = ArtistRewardabi.networks[networkId];
 
-    if (networkData) {
-      const Eventdata = new web3.eth.Contract(
+    if (networkdataeth) {
+      const Eventdataeth = new web3.eth.Contract(
         ArtistRewardabi.abi,
-        networkData.address
+        networkdataeth.address
       );
-      setData(Eventdata);
-      console.log(await Eventdata.methods);
-      const x = await Eventdata.methods.symbol().call();
+      setdataeth(Eventdataeth);
+      console.log(await Eventdataeth.methods);
+      const x = await Eventdataeth.methods.symbol().call();
       setSymbol(x);
       console.log(x);
+      const ev = await Eventdataeth.methods.getEvents().call();
+      setEvent(ev);
+      console.log(ev);
     } else {
       window.alert("smart contract not deployed");
     }
   };
 
-  const send = async () => {
-    await data.methods
-      .Send(artistacc, "fan1", "artist1", 10000000, "hello artist thanks")
+
+  
+ 
+
+
+  const send = async (e) => {
+    await dataeth.methods
+      .Send(e, "fan1", "artist1", 10000000, "hello artist thanks")
       .send({ from: account, value: Web3.utils.toWei("1", "ether") })
       .on("transactionhash", () => {
         console.log("send");
@@ -74,36 +94,43 @@ function App() {
   };
 
   const sendartist = async () => {
-    await data.methods
+    await dataeth.methods
       .createArtist(artistacc, "artist2", "singer")
       .send({ from: account })
       .then(console.log("artist added"));
   };
 
   const getEventbyid = async (id) => {
-    // await data.methods.Eventslist(id).send({from:account}).on("transactionhash",() => {
+    // await dataeth.methods.Eventslist(id).send({from:account}).on("transactionhash",() => {
     //   console.log("events fetched");
     // });
 
-    let x = await data.methods.Eventslist(id).call();
+    let x = await dataeth.methods.Eventslist(id).call();
     return x;
   };
 
   const getArtistbyid = async (id) => {
-    // await data.methods.Eventslist(id).send({from:account}).on("transactionhash",() => {
+    // await dataeth.methods.Eventslist(id).send({from:account}).on("transactionhash",() => {
     //   console.log("events fetched");
     // });
 
-    let x = await data.methods.Artistslist(id).call();
+    let x = await dataeth.methods.Artistslist(id).call();
     console.log(x);
   };
 
   const getEventslist = async () => {
-    console.log(await data.methods.getEvents().call());
+    //console.log(await dataeth.methods.getEvents().call());
+    const ev = await dataeth.methods.getEvents().call();
+    setEvent(ev);
+    console.log(ev[0].artistname);
+    setChange(true);
   };
 
   const getArtistslist = async () => {
-    console.log(await data.methods.getArtists().call());
+    console.log();
+    const ar = await dataeth.methods.getArtists().call();
+    setArtist(ar);
+
   };
 
   const onChangeevent = (e) => {
@@ -115,26 +142,30 @@ function App() {
 
   const onSubmitgetevent = async (e) => {
     e.preventDefault();
-    //send();
-    sendartist();
+    send();
+    //sendartist();
     //getArtistbyid(eventid);
     //getArtistslist();
     //getEventslist();
     // const test = await getEventbyid(eventid);
     // setEvent(test);
     // setChange(true);
-    // console.log(test);
+    //console.log(event);
   };
+  // if(artistlist===null ){
+  //    findartist();
+  // }
 
-  if (!data && !event) {
+  if (!dataeth && !event && isLoading && !user) {
     return <div>LOADING</div>;
   }
+  else{
+    console.log(data);
   return (
     <div className="App">
       Hello
       <p>ACCOUNT:{account}</p>
       <p>BALANCE:{balance}</p>
-      <p>SYMBOL :{symbol}</p>
       <form onSubmit={onSubmitgetevent}>
         <h3>GET EVENT INFORMATION</h3>
         <input
@@ -143,12 +174,22 @@ function App() {
           placeholder="enter event id"
         />
         <p>
+          <select onChange={(e) => console.log(e.currentTarget.value)}>
+            {data.map((user) => (
+              <option value={user.attributes.image}>
+                {user.attributes.name}
+              </option>
+            ))}
+          </select>
+        </p>
+        <p>
           <button>SEND</button>
         </p>
       </form>
-      ARTIST NAME : {change && event.artistname}
+      ARTIST NAME : {change && event[0].artistname}
     </div>
   );
+    }
 }
 
-export default App;
+export default Main;

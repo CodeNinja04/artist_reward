@@ -8,8 +8,9 @@ import { Navigate, useNavigate } from "react-router-dom";
 const Role = () => {
 
     let navigate = useNavigate();
-    const [roleset,setRoleset]=useState("");
+    const [roleset,setRoleset]=useState("fan");
     const [imagehash, setImagehash] = useState("");
+    const [account,setAccount] = useState("");
 
     const {
       login,
@@ -59,6 +60,7 @@ else if (current.attributes.role===undefined || current.attributes.role==null) {
             placeholder="Enter your image hash on ipfs"
             onChange={(e) => setImagehash(e.currentTarget.value)}
           />
+          <input type="text" placeholder="account address" onChange={(e) => setAccount(e.currentTarget.value)} />
           <button
             onClick={() =>
               setUserData({
@@ -66,6 +68,7 @@ else if (current.attributes.role===undefined || current.attributes.role==null) {
                 email: current.attributes.email,
                 role: roleset,
                 imagehash: imagehash,
+                account:account
               }).then(navigate("/"))
             }
             disabled={isUserUpdating}

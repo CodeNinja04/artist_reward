@@ -7,6 +7,7 @@ import Home from "./components/Home";
 import Upload from "./components/UploadDataModal";
 import Role from "./components/Role";
 import Main from "./components/Main";
+import ArtistList from "./components/ArtistList";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="role" element={<Role />} />
           <Route path="main" element={<Main />} />
+          <Route path="artistlist" element={<ArtistList />} />
         </Routes>
       </BrowserRouter>
     </div>
