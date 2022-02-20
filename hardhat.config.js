@@ -10,20 +10,18 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
   }
 });
 
-// You need to export an object to set up your config
-// Go to https://hardhat.org/config/ to learn more
+const ALCHEMY_API_KEY = "FggN__A_hciRCWxGCS_E7lTY_jmIp2UX";
+const ROPSTEN_PRIVATE_KEY = "c91e7c75c03c0d2814e00b23200a521197c036bb87537cb9bcd1356e410cb4b8";
 
-/**
- * @type import('hardhat/config').HardhatUserConfig
- */
 module.exports = {
-  solidity: "0.8.4",
+  solidity: "0.8.0",
   paths: {
-    artifacts: "./clients/src/artifacts",
+    artifacts: "./client/src/artifacts",
   },
   networks: {
-    hardhat: {
-      chainId: 1337,
-    },
+    ropsten: {
+      url: `https://eth-ropsten.alchemyapi.io/v2/${ALCHEMY_API_KEY}`,
+      accounts: [`${ROPSTEN_PRIVATE_KEY}`]
   },
-};
+}
+}
