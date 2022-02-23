@@ -1,40 +1,83 @@
+/* eslint-disable array-callback-return */
 import "./App.css";
 import { useState } from "react";
 import { ethers } from "ethers";
 import Artist from "./artifacts/contracts/Artist.sol/ArtistReward.json";
 import { useMoralis } from "react-moralis";
-import { isFunction } from "formik";
+import { styled } from '@mui/material/styles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import { Input } from '@mui/material';
+import TextField from '@mui/material/TextField';
+import Moralis from 'moralis';
 
+
+//import { isFunction } from "formik";
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: theme.palette.common.black,
+    color: theme.palette.common.white,
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14,
+  },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:nth-of-type(odd)': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  // hide last border
+  '&:last-child td, &:last-child th': {
+    border: 0,
+  },
+}));
 
 const ContractAddress = "0x8de5754f6dc14de312f668f82b4bcc8b930e374d";
 
 function App() {
   // store greeting in local state
-   const {
-     setUserData,
-     userError,
-     isUserUpdating,
-     authenticate,
-     isAuthenticated,
-     user,
-     logout,
-     isAuthenticating
-   } = useMoralis();
-  const [greeting, setGreetingValue] = useState();
-  const [userdata,setUserdata]=useState({
-    username:"",
-    email:"",
-    password:"",
-    role:"user"
-});
-  const [value,setValue] = useState();
+
+  async function requestAccount() {
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+  }
+
+  const {
+    setUserData,
+    userError,
+    isUserUpdating,
+    authenticate,
+    isAuthenticated,
+    user,
+    logout,
+    isAuthenticating,
+  } = useMoralis();
+
+  const [userdata, setUserdata] = useState({
+    username: "",
+    email: "",
+    password: "",
+    role: "user",
+  });
+
+  const [artistid, setArtistid] = useState("1");
+  const [artistdata, setArtistdata] = useState();
+  const [load, setLoad] = useState(false)
+
+  const [value, setValue] = useState();
   const [reward, setReward] = useState({
-    artist_id:"",
-    fanname:"",
-    artistname:"",
-    artist_addr:"",
-    message:"",
-    value:"",
+    artist_id: "",
+    fanname: "",
+    artistname: "",
+    artist_addr: "",
+    message: "",
+    value: "",
   });
 
   if (!isAuthenticated) {
@@ -93,9 +136,6 @@ function App() {
     );
   } else if (user.attributes.role === "user") {
     // request access to the user's MetaMask account
-    async function requestAccount() {
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-    }
 
     // call the smart contract, read the current greeting value
     async function fetchRewards() {
@@ -117,8 +157,9 @@ function App() {
     }
 
     // call the smart contract, send an update
-    async function send() {
-      if (!reward) return;
+    async function send(e) {
+      e.preventDefault();
+      if (!reward.artist_addr) return;
       if (typeof window.ethereum !== "undefined") {
         await requestAccount();
         const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -128,13 +169,15 @@ function App() {
           Artist.abi,
           signer
         );
+        console.log(signer)
 
-        const tx = signer.sendTransaction({
+        const tx = await signer.sendTransaction({
           to: reward.artist_addr,
           value: ethers.utils.parseUnits(reward.value, "gwei"),
         });
-        console.log("data: ", tx);
+        // console.log("data: ", tx);
         if (tx) {
+          console.log(tx);
           const transaction = await contract.send(
             reward.artist_id,
             reward.fanname,
@@ -144,39 +187,20 @@ function App() {
             reward.value
           );
           await transaction.wait();
-          console.log("done");
+          //console.log("done");
         }
 
-        //fetchRewards();
+
       }
     }
 
-    function test() {
-      console.log(reward);
-    }
-    // async function sendethr() {
-    //   if (typeof window.ethereum !== "undefined") {
-    //     await requestAccount();
-    //     const provider = new ethers.providers.Web3Provider(window.ethereum);
-    //     const signer = provider.getSigner();
-    //    try {
-    //     const tx = signer.sendTransaction({
-    //       to: to,
-    //       value: ethers.utils.parseEther(value),
-    //     });
-    //       console.log("data: ", tx);
-    //     } catch (err) {
-    //       console.log("Error: ", err);
-    //     }
 
-    //   }
-    // }
 
     return (
       <div className="App">
         <header className="App-header">
           <button onClick={() => logout()} disabled={isAuthenticating}>
-           Logout
+            Logout
           </button>
           {user.get("username")}
           <button onClick={fetchRewards}>Fetch Reward</button>
@@ -234,13 +258,131 @@ function App() {
     );
   } else {
 
-    return(
-      <div>ARTIST</div>
-    )
+    //    async function requestAccount() {
+    //   await window.ethereum.request({ method: "eth_requestAccounts" });
+    // }
+
+
+    async function fetchRewardsbyId() {
+      if (typeof window.ethereum !== "undefined") {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(
+          ContractAddress,
+          Artist.abi,
+          provider
+        );
+        try {
+          const data = await contract.getRewardbyId(artistid); //user.attributes.id);
+          console.log("data: ", data);
+          console.log("data: ", data[0][3]);
+          setLoad(true)
+          setArtistdata(data);
+        } catch (err) {
+          console.log("Error: ", err);
+        }
+      }
+    }
+
+    async function fetchRewards() {
+      if (typeof window.ethereum !== "undefined") {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const contract = new ethers.Contract(
+          ContractAddress,
+          Artist.abi,
+          provider
+        );
+        try {
+          const data = await contract.getRewards();
+          console.log("data: ", data);
+          console.log(contract);
+        } catch (err) {
+          console.log("Error: ", err);
+        }
+      }
+    }
+
+    // if(artistdata){
+
+    // }
+
+
+    // });
+
+    function sendReply(e) {
+      //e.preventDefault();
+
+      const Reply = Moralis.Object.extend("reply");
+      const reply = new Reply();
+
+      reply.set("fanname", "test");
+      reply.set("message", "test");
+      reply.set("artistname", "test");
+
+      reply.save()
+        .then((reply) => {
+
+          alert('New object created with objectId: ' + reply.fanname);
+        }, (error) => {
+
+          alert('Failed to create new object, with error code: ' + error.message);
+        });
+    }
+
+
+    return (
+      <div className="App">
+        <header className="App-header">
+          <button onClick={() => logout()} disabled={isAuthenticating}>
+            Logout
+          </button>
+          ARTIST
+          <button onClick={fetchRewardsbyId}>GET REWARDS</button>
+          <button onClick={fetchRewards}>Fetch Reward</button>
+
+
+          <TableContainer component={Paper}>
+            <Table sx={{ minWidth: 650 }} aria-label="customized table">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>ArtistId</StyledTableCell>
+                  <StyledTableCell align="right">FanName</StyledTableCell>
+                  <StyledTableCell align="right">ArtistName</StyledTableCell>
+                  <StyledTableCell align="center">Address</StyledTableCell>
+                  <StyledTableCell align="left">Message</StyledTableCell>
+                  <StyledTableCell align="right">Amount</StyledTableCell>
+                  <StyledTableCell align="center">Reply</StyledTableCell>
+                  <StyledTableCell align="right">create-nft</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!artistdata ? <p>LOADING</p> : artistdata.map((row) => (
+
+                  <TableRow
+                    key={row[1]}
+                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  >
+
+                    <StyledTableCell component="th" scope="row">
+                      {row[0]}
+                    </StyledTableCell>
+                    <StyledTableCell align="right">{row[1]}</StyledTableCell>
+                    <StyledTableCell align="right">{row[2]}</StyledTableCell>
+                    <StyledTableCell align="center" >{row[3]} </StyledTableCell>
+                    <StyledTableCell align="left">{row[4]}</StyledTableCell>
+                    <StyledTableCell align="right">{row[6].toNumber()} Gwei</StyledTableCell>
+                    <StyledTableCell align="center"><TextField id="outlined-basic" label="Give Reply" variant="outlined" /></StyledTableCell>
+                    <StyledTableCell align="right"><button>MINT</button></StyledTableCell>
+
+                  </TableRow>
+
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </header>
+      </div>
+    );
   }
-
 }
-
-
 
 export default App;
