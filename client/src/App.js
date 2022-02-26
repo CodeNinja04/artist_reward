@@ -12,9 +12,18 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Input } from '@mui/material';
+import { Input, Alert } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import Moralis from 'moralis';
+import 'semantic-ui-css/semantic.min.css'
+import { Button, Loader, Message } from 'semantic-ui-react'
+import NavBar from "./components/NavBar"
+import isWeekend from 'date-fns/isWeekend';
+import AdapterDateFns from '@mui/lab/AdapterDateFns';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import StaticDatePicker from '@mui/lab/StaticDatePicker';
+import { CalendarPicker } from '@mui/lab';
+import Grid from '@mui/material/Grid';
 
 
 //import { isFunction } from "formik";
@@ -66,9 +75,16 @@ function App() {
     role: "user",
   });
 
-  const [artistid, setArtistid] = useState("1");
+  const [messagedata,setMessagedata]=useState({
+    message:"Thank you for all your support",
+    artistname:"artist",
+    fanname:"fanname"
+  })
+
+  const [artistid, setArtistid] = useState("artistid");
   const [artistdata, setArtistdata] = useState();
   const [load, setLoad] = useState(false)
+  const [date, setDate] = useState(new Date());
 
   const [value, setValue] = useState();
   const [reward, setReward] = useState({
@@ -90,9 +106,9 @@ function App() {
     console.log(userdata);
 
     return (
-      <div>
+      <div className="App">
         {/* <pre>{JSON.stringify(user)}</pre> */}
-
+      
         <div>
           <input
             onChange={(e) =>
@@ -198,14 +214,23 @@ function App() {
 
     return (
       <div className="App">
+        <NavBar />
         <header className="App-header">
-          <button onClick={() => logout()} disabled={isAuthenticating}>
-            Logout
-          </button>
-          {user.get("username")}
-          <button onClick={fetchRewards}>Fetch Reward</button>
+         
+         <div className="middle"> 
+            <Button positive onClick={fetchRewards}>Fetch Reward</Button>
+          {/* <Grid   style={{backgroundColor:"grey",display: "flex"}}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+             
+              <CalendarPicker date={date} onChange={(newDate) => setDate(newDate)}  /> */}
+           
+                
+              {/* </LocalizationProvider>
+          </Grid> */}
           {/* <button onClick={send}>Set Greeting</button> */}
 
+          </div >
+          <div className="form">
           <form onSubmit={send}>
             <input
               onChange={(e) =>
@@ -243,6 +268,7 @@ function App() {
             />
             <button>Submit</button>
           </form>
+          </div>
 
           {console.log(reward)}
           <div>
@@ -309,35 +335,51 @@ function App() {
     // });
 
     function sendReply(e) {
-      //e.preventDefault();
+      e.preventDefault();
 
       const Reply = Moralis.Object.extend("reply");
       const reply = new Reply();
 
-      reply.set("fanname", "test");
-      reply.set("message", "test");
-      reply.set("artistname", "test");
+      reply.set("fanname", messagedata.fanname);
+      reply.set("message", messagedata.message);
+      reply.set("artistname", messagedata.artistname);
 
       reply.save()
         .then((reply) => {
-
-          alert('New object created with objectId: ' + reply.fanname);
+          console.log(reply);
+            < Alert severity = "success" > Message Sent Successfully</Alert >
         }, (error) => {
 
           alert('Failed to create new object, with error code: ' + error.message);
         });
     }
 
-
+console.log(messagedata)
+    const list = [
+      'You can now have cover images on blog pages',
+      'Drafts will now auto-save while writing',
+    ]
     return (
       <div className="App">
+        <NavBar />
         <header className="App-header">
-          <button onClick={() => logout()} disabled={isAuthenticating}>
+          <h1 style={{fontWeight:"bold"}}>ARTIST PAGE</h1>
+          
+         
+
+
+          <Message header='New Site Features' list={list} />
+          
+          {/* <Button  negative onClick={() => logout()} disabled={isAuthenticating}>
             Logout
-          </button>
-          ARTIST
-          <button onClick={fetchRewardsbyId}>GET REWARDS</button>
-          <button onClick={fetchRewards}>Fetch Reward</button>
+          </Button> */}
+
+         <div className="middle">
+
+            <Button primary onClick={fetchRewardsbyId}>GET REWARDS</Button>
+            <Button positive onClick={fetchRewards}>Fetch Reward</Button>
+         </div>
+         
 
 
           <TableContainer component={Paper}>
@@ -351,11 +393,13 @@ function App() {
                   <StyledTableCell align="left">Message</StyledTableCell>
                   <StyledTableCell align="right">Amount</StyledTableCell>
                   <StyledTableCell align="center">Reply</StyledTableCell>
-                  <StyledTableCell align="right">create-nft</StyledTableCell>
+                  <StyledTableCell align="center">Send</StyledTableCell>
+
+                  
                 </TableRow>
               </TableHead>
               <TableBody>
-                {!artistdata ? <p>LOADING</p> : artistdata.map((row) => (
+                {!artistdata ? <Loader size="large" active inline='centered' /> : artistdata.map((row) => (
 
                   <TableRow
                     key={row[1]}
@@ -370,8 +414,10 @@ function App() {
                     <StyledTableCell align="center" >{row[3]} </StyledTableCell>
                     <StyledTableCell align="left">{row[4]}</StyledTableCell>
                     <StyledTableCell align="right">{row[6].toNumber()} Gwei</StyledTableCell>
-                    <StyledTableCell align="center"><TextField id="outlined-basic" label="Give Reply" variant="outlined" /></StyledTableCell>
-                    <StyledTableCell align="right"><button>MINT</button></StyledTableCell>
+                    <StyledTableCell align="center"><TextField id="outlined-basic" label="Give Reply" variant="outlined" placeholder="Thank you for all your support" onChange={(e) =>
+                      setMessagedata({ fanname:row[1],artistname:row[2], message: e.target.value })
+                    } /></StyledTableCell>
+                    <StyledTableCell align="right"><Button  primary onClick={sendReply}>REPLY</Button></StyledTableCell>
 
                   </TableRow>
 
