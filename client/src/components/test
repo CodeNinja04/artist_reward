@@ -1,0 +1,45 @@
+  <TableContainer component={Paper}>
+            <Table sx={{ minWidth: 650 }} aria-label="customized table">
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>ArtistId</StyledTableCell>
+                  <StyledTableCell align="right">FanName</StyledTableCell>
+                  <StyledTableCell align="right">ArtistName</StyledTableCell>
+                  <StyledTableCell align="center">Address</StyledTableCell>
+                  <StyledTableCell align="left">Message</StyledTableCell>
+                  <StyledTableCell align="right">Amount</StyledTableCell>
+                  <StyledTableCell align="center">Reply</StyledTableCell>
+                  <StyledTableCell align="center">Send</StyledTableCell>
+
+
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {!artistreply ? <Loader size="large" active inline='centered' /> : artistreply.map((row) => (
+
+                  console.log(row)
+
+                  // <TableRow
+                  //   key={row[1]}
+                  //   sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                  // 
+
+                  //   <StyledTableCell component="th" scope="row">
+                  //     {row[0]}
+                  //   </StyledTableCell>
+                  //   <StyledTableCell align="right">{row[1]}</StyledTableCell>
+                  //   <StyledTableCell align="right">{row[2]}</StyledTableCell>
+                  //   <StyledTableCell align="center" >{row[3]} </StyledTableCell>
+                  //   <StyledTableCell align="left">{row[4]}</StyledTableCell>
+                  //   <StyledTableCell align="right">{row[6].toNumber()} Gwei</StyledTableCell>
+                  //   <StyledTableCell align="center"><TextField id="outlined-basic" label="Give Reply" variant="outlined" placeholder="Thank you for all your support" onChange={(e) =>
+                  //     setMessagedata({ fanname: row[1], artistname: row[2], message: e.target.value })
+                  //   } /></StyledTableCell>
+                  //   <StyledTableCell align="right"><Button primary>REPLY</Button></StyledTableCell>
+
+                  // </TableRow>
+
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>

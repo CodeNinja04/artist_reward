@@ -3,7 +3,7 @@ import "./App.css";
 import { useState } from "react";
 import { ethers } from "ethers";
 import Artist from "./artifacts/contracts/Artist.sol/ArtistReward.json";
-import { useMoralis } from "react-moralis";
+import { useMoralis, useMoralisFile  } from "react-moralis";
 import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -12,18 +12,20 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Input, Alert } from '@mui/material';
+import { Alert } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import Moralis from 'moralis';
 import 'semantic-ui-css/semantic.min.css'
-import { Button, Loader, Message } from 'semantic-ui-react'
-import NavBar from "./components/NavBar"
+import { Button, Loader, Message, Input} from 'semantic-ui-react'
+import NavBarArtist from "./components/NavBarArtist"
+import NavBarUser from "./components/NavBarUser"
 import isWeekend from 'date-fns/isWeekend';
 import AdapterDateFns from '@mui/lab/AdapterDateFns';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import StaticDatePicker from '@mui/lab/StaticDatePicker';
 import { CalendarPicker } from '@mui/lab';
 import Grid from '@mui/material/Grid';
+
 
 
 //import { isFunction } from "formik";
@@ -66,6 +68,7 @@ function App() {
     user,
     logout,
     isAuthenticating,
+    saveFile, moralisFile
   } = useMoralis();
 
   const [userdata, setUserdata] = useState({
@@ -83,6 +86,17 @@ function App() {
 
   const [artistid, setArtistid] = useState("artistid");
   const [artistdata, setArtistdata] = useState();
+  const [file,setFile]=useState()
+  const [nft, setNft] = useState({
+    id: "",
+    fanname: "",
+    artistname: "",
+    message: "",
+
+  })
+  const [artistreply,setArtistreply] = useState(
+   
+  )
   const [load, setLoad] = useState(false)
   const [date, setDate] = useState(new Date());
 
@@ -150,13 +164,33 @@ function App() {
         </div>
       </div>
     );
-  } else if (user.attributes.role === "user") {
+  }
+  
+  // USER PART
+  
+  else if (user.attributes.role === "user") {
     // request access to the user's MetaMask account
 
     // call the smart contract, read the current greeting value
+
+    const saveFileIPFS = (f) => {
+      console.log(f)
+      const fileIpfs = saveFile(f.name, file, { saveIPFS: true })
+      console.log(fileIpfs)
+    }
+
+    const handleFinal = () => {
+      saveFileIPFS(file[0])
+      
+    }
+
+
     async function fetchRewards() {
       if (typeof window.ethereum !== "undefined") {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        console.log(await signer.getAddress() )
+        
         const contract = new ethers.Contract(
           ContractAddress,
           Artist.abi,
@@ -180,6 +214,7 @@ function App() {
         await requestAccount();
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
+
         const contract = new ethers.Contract(
           ContractAddress,
           Artist.abi,
@@ -210,79 +245,145 @@ function App() {
       }
     }
 
+    async function getrewards() {
+
+      const Reply = Moralis.Object.extend("reply");
+      const query = new Moralis.Query(Reply);
+
+      query.equalTo("fanname", user.get('username'));
+
+      const results = await query.find();
+
+      setArtistreply(results);
+      console.log(results)
+}
+
+async function nft() {
+
+  
+}
 
 
-    return (
+
+
+  return (
       <div className="App">
-        <NavBar />
+        <NavBarUser />
         <header className="App-header">
          
-         <div className="middle"> 
-            <Button positive onClick={fetchRewards}>Fetch Reward</Button>
-          {/* <Grid   style={{backgroundColor:"grey",display: "flex"}}>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-             
-              <CalendarPicker date={date} onChange={(newDate) => setDate(newDate)}  /> */}
-           
-                
-              {/* </LocalizationProvider>
-          </Grid> */}
-          {/* <button onClick={send}>Set Greeting</button> */}
-
-          </div >
-          <div className="form">
-          <form onSubmit={send}>
-            <input
+         
+          <div className="form" >
+            <form onSubmit={send}  >
+            <Input
               onChange={(e) =>
                 setReward({ ...reward, artist_id: e.target.value })
               }
               placeholder="ArtistID"
             />
-            <input
+            <Input
               onChange={(e) =>
                 setReward({ ...reward, fanname: e.target.value })
               }
               placeholder="FanName"
             />
-            <input
+            <Input
               onChange={(e) =>
                 setReward({ ...reward, artistname: e.target.value })
               }
               placeholder="ArtistName"
             />
-            <input
+            <Input
               onChange={(e) =>
                 setReward({ ...reward, artist_addr: e.target.value })
               }
               placeholder="Artist-Address"
             />
-            <input
+            <Input
               onChange={(e) =>
                 setReward({ ...reward, message: e.target.value })
               }
               placeholder="Message"
             />
-            <input
+            <Input
               onChange={(e) => setReward({ ...reward, value: e.target.value })}
               placeholder="Amount"
             />
-            <button>Submit</button>
+              <p><Button negative>Submit</Button></p>
           </form>
           </div>
+        <div className="middle">
+          <Button positive onClick={getrewards}>Get Reward</Button>
+          {/* <Grid   style={{backgroundColor:"grey",display: "flex"}}>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+             
+              <CalendarPicker date={date} onChange={(newDate) => setDate(newDate)}  /> */}
 
-          {console.log(reward)}
-          <div>
-            ARTIST ID: {reward.artist_id}
-            {reward.fanname}
-            {reward.artistname}
-            {reward.artist_addr}
-            {reward.message}
-            {reward.value}
-          </div>
+
+          {/* </LocalizationProvider>
+          </Grid> */}
+          {/* <button onClick={send}>Set Greeting</button> */}
+
+        </div >
+
+{console.log(reward)}
+{console.log(artistreply)}
+          {/* <div>
+          {!artistreply ? <Loader size="large" active inline='centered' />  : artistreply.map((row)=>{
+
+            {console.log(row.id)}
+
+            } )}
+      
+          </div> */}
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 650 }} aria-label="customized table">
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>ArtistId</StyledTableCell>
+                <StyledTableCell align="left">FanName</StyledTableCell>
+                <StyledTableCell align="left">ArtistName</StyledTableCell>
+                <StyledTableCell align="center">Address</StyledTableCell>
+                <StyledTableCell align="center">Upload</StyledTableCell>
+                <StyledTableCell align="center">Mint</StyledTableCell>
+               
+
+
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {!artistreply ? <Loader size="large" active inline='centered' /> : artistreply.map((row) => (
+
+                <TableRow
+                  key={row.id}
+                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                >
+
+                  <StyledTableCell component="th" scope="row">
+                    {row.id}
+                  </StyledTableCell>
+                  <StyledTableCell align="left">{row.attributes.fanname}</StyledTableCell>
+                  <StyledTableCell align="left">{row.attributes.artistname}</StyledTableCell>
+                  <StyledTableCell align="center" >{row.attributes.message} </StyledTableCell>
+                  <StyledTableCell align="center" ><input type="file" onChange={(e) => setFile(e.target.files)} /> </StyledTableCell>
+                  {console.log(file)}
+                  <StyledTableCell align="center"><Button primary onClick >MINT</Button></StyledTableCell>
+
+                </TableRow>
+
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
         </header>
       </div>
     );
-  } else {
+  } 
+  
+  // ARTIST PART
+
+
+  else {
 
     //    async function requestAccount() {
     //   await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -361,7 +462,7 @@ console.log(messagedata)
     ]
     return (
       <div className="App">
-        <NavBar />
+        <NavBarArtist />
         <header className="App-header">
           <h1 style={{fontWeight:"bold"}}>ARTIST PAGE</h1>
           
